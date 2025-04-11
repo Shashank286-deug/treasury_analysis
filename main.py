@@ -17,19 +17,33 @@ if uploaded_file:
         with open("temp_cash_flows.csv", "wb") as f:
             f.write(uploaded_file.read())
         
-        # Load data
-        cash_flow_data = load_cash_flow_data("temp_cash_flows.csv")
-        st.write("Uploaded Data Columns:", list(cash_flow_data.columns))
-        st.write("Uploaded Data Preview:", cash_flow_data.head())
+        # Load raw data to inspect columns
+        raw_df = pd.read_csv("temp_cash_flows.csv")
+        st.write("Detected Columns:", list(raw_df.columns))
+        
+        # Let user map columns
+        st.subheader("Map Your CSV Columns")
+        date_col = st.selectbox("Select Date Column", raw_df.columns)
+        inflow_col = st.selectbox("Select Inflow Column", raw_df.columns)
+        outflow_col = st.selectbox("Select Outflow Column", raw_df.columns)
+        
+        # Rename columns to standard names
+        cash_flow_data = raw_df[[date_col, inflow_col, outflow_col]].copy()
+        cash_flow_data.columns = ['Date', 'Inflow', 'Outflow']
+        cash_flow_data['Date'] = pd.to_datetime(cash_flow_data['Date'])
+        
+        st.write("Standardized Data Columns:", list(cash_flow_data.columns))
+        st.write("Standardized Data:", cash_flow_data.head())
     except Exception as e:
-        st.error(f"Error loading CSV: {e}")
+        st.error(f"Error processing CSV: {e}")
         st.stop()
 
     # Forecast parameters
     periods = st.slider("Forecast Periods (Months)", 1, 24, 12)
     growth_rate = st.slider("Growth Rate", 0.0, 0.1, 0.02, 0.01)
     
-    # Debug: Try forecasting
+    # Debug: Verify columns before forecasting
+    st.write("Columns before forecasting:", list(cash_flow_data.columns))
     try:
         forecast = forecast_cash_flows(cash_flow_data, periods, growth_rate)
         st.write("Cash Flow Forecast:", forecast)
