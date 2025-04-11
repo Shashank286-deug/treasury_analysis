@@ -3,6 +3,8 @@ import numpy as np
 
 def forecast_cash_flows(cash_flow_data, periods=12, growth_rate=0.02):
     """Forecast future cash flows based on historical data."""
+    if not all(col in cash_flow_data.columns for col in ['Date', 'Inflow', 'Outflow']):
+        raise ValueError("DataFrame missing required columns: Date, Inflow, Outflow")
     last_cash_flow = cash_flow_data[['Inflow', 'Outflow']].iloc[-1]
     forecast = []
     
@@ -18,6 +20,11 @@ def forecast_cash_flows(cash_flow_data, periods=12, growth_rate=0.02):
 
 def dcf_valuation(cash_flows, discount_rate=0.1, terminal_growth=0.02):
     """Calculate DCF valuation."""
+    if not 'Net Cash Flow' in cash_flows.columns:
+        raise ValueError("Forecast DataFrame missing 'Net Cash Flow' column")
+    if discount_rate <= terminal_growth:
+        raise ValueError("Discount rate must be greater than terminal growth rate")
+    
     cash_flows = cash_flows['Net Cash Flow'].values
     periods = len(cash_flows)
     
@@ -36,19 +43,10 @@ def sensitivity_analysis(cash_flow_data, base_growth=0.02, base_discount=0.1):
     results = []
     for g in growth_rates:
         for d in discount_rates:
-            forecast = forecast_cash_flows(cash_flow_data, growth_rate=g)
-            valuation = dcf_valuation(forecast, discount_rate=d)
-            results.append([g, d, valuation])
-    
+            try:
+                forecast = forecast_cash_flows(cash_flow_data, growth_rate=g)
+                valuation = dcf_valuation(forecast, discount_rate=d)
+                results.append([g, d, valuation])
+            except Exception as e:
+                results.append([g, d, float('nan')])  # Handle invalid combinations
     return pd.DataFrame(results, columns=['Growth Rate', 'Discount Rate', 'Valuation'])
-
-if __name__ == "__main__":
-    cash_flow_data = pd.read_csv('cash_flows.csv', parse_dates=['Date'])
-    forecast = forecast_cash_flows(cash_flow_data)
-    print("Cash Flow Forecast:\n", forecast.head())
-    
-    valuation = dcf_valuation(forecast)
-    print(f"DCF Valuation: ${valuation:,.2f}")
-    
-    sensitivity = sensitivity_analysis(cash_flow_data)
-    print("Sensitivity Analysis:\n", sensitivity.head())
