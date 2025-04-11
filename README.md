@@ -7,6 +7,7 @@ A Python-based tool for cash flow forecasting, DCF valuation, and sensitivity an
 - **DCF Valuation**: Estimates the present value of forecasted cash flows.
 - **Sensitivity Analysis**: Analyzes valuation under varying growth and discount rates.
 - **Reporting**: Generates visualizations (line charts, heatmaps) and Excel reports.
+- **Web Interface**: Interactive app using Streamlit.
 
 ## Installation
 1. Clone the repository:
