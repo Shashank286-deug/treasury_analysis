@@ -1,0 +1,7 @@
+
+Replace `your-username` with your GitHub username when you create the repo.
+
+#### 1.8: Create `.gitignore`
+This prevents unnecessary files from being tracked.
+
+**File**: `.gitignore`
