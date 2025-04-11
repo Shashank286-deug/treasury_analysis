@@ -1,22 +1,31 @@
 import pandas as pd
-import yfinance as yf
+import io
 
-def generate_financial_report(cash_flows_file):
-    """Generate U.S. GAAP-compliant financial reports for renewable energy projects."""
+def export_to_excel(forecast, sensitivity, filename="treasury_report.xlsx"):
+    """Export forecast and sensitivity analysis to Excel (original April 11 function)."""
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        forecast.to_excel(writer, sheet_name='Forecast', index=False)
+        sensitivity.to_excel(writer, sheet_name='Sensitivity', index=False)
+    output.seek(0)
+    return output
+
+def generate_financial_report(cash_flow_data):
+    """Generate U.S. GAAP-compliant financial report for renewable energy projects."""
     try:
-        df = pd.read_csv(cash_flows_file)
+        df = cash_flow_data.copy()
         required_cols = ['Date', 'Inflow', 'Outflow']
         if not all(col in df.columns for col in required_cols):
-            raise ValueError("Missing required columns in CSV")
+            raise ValueError("Missing required columns in DataFrame")
 
-        # Original cash flow logic (from April 11)
+        # Calculate Net Cash Flow (original logic)
         df['Net_Cash'] = df['Inflow'] - df['Outflow']
         total_cash_flow = df['Net_Cash'].sum()
 
-        # New: EBITDA (simplified as Net Cash for demo)
+        # EBITDA (simplified as net cash for demo)
         ebitda = total_cash_flow
 
-        # New: Budget vs. Actual
+        # Budget vs. Actual
         if 'Budget' in df.columns:
             actual_inflow = df['Inflow'].sum()
             budget_inflow = df['Budget'].sum()
@@ -26,11 +35,7 @@ def generate_financial_report(cash_flows_file):
             variance = 0
             variance_pct = 0
 
-        # Original: Treasury yield (from April 11)
-        treasury = yf.Ticker("^TNX")
-        discount_rate = treasury.history(period="1d")['Close'].iloc[-1] / 100
-
-        # New: Simplified financial statement
+        # Simplified Balance Sheet
         balance_sheet = {
             'Assets': {'Cash': df['Inflow'].sum()},
             'Liabilities': {'Accounts Payable': df['Outflow'].sum()},
@@ -38,21 +43,20 @@ def generate_financial_report(cash_flows_file):
         }
 
         report = {
-            'Total_Cash_Flow': total_cash_flow,  # Original
-            'Discount_Rate': discount_rate,      # Original
-            'EBITDA': ebitda,                   # New
-            'Budget_vs_Actual': variance,       # New
-            'Variance_Percent': variance_pct,   # New
-            'Balance_Sheet': balance_sheet      # New
+            'EBITDA': ebitda,
+            'Budget_vs_Actual': variance,
+            'Variance_Percent': variance_pct,
+            'Balance_Sheet': balance_sheet,
+            'Total_Cash_Flow': total_cash_flow  # For original compatibility
         }
 
-        # New: Export report
-        report_df = pd.DataFrame({
-            'Metric': ['EBITDA', 'Variance', 'Variance %'],
-            'Value': [ebitda, variance, f"{variance_pct:.2f}%"]
-        })
+        # Export U.S. GAAP report
         import os
         os.makedirs('outputs', exist_ok=True)
+        report_df = pd.DataFrame({
+            'Metric': ['EBITDA', 'Total Cash Flow', 'Budget vs. Actual', 'Variance %'],
+            'Value': [f"${ebitda:,.2f}", f"${total_cash_flow:,.2f}", f"${variance:,.2f}", f"{variance_pct:.2f}%"]
+        })
         report_df.to_csv('outputs/financial_report.csv', index=False)
 
         return report
@@ -65,8 +69,8 @@ def create_trial_balance():
     try:
         trial_data = pd.DataFrame({
             'Account': ['Cash', 'Revenue', 'Accounts Payable', 'Expenses'],
-            'Debit': [100000, 0, 0, 40000],
-            'Credit': [0, 100000, 40000, 0]
+            'Debit': [100000, 0, 0, 80000],
+            'Credit': [0, 100000, 80000, 0]
         })
         import os
         os.makedirs('data', exist_ok=True)
@@ -76,7 +80,7 @@ def create_trial_balance():
         print(f"Error creating trial balance: {e}")
         return False
 
-def validate_trial_balance(trial_file):
+def validate_trial_balance(trial_file="data/trial_balance.csv"):
     """Validate trial balance for audit readiness."""
     import os
     if not os.path.exists(trial_file):
@@ -96,13 +100,3 @@ def validate_trial_balance(trial_file):
             return False, f"Trial balance mismatch: Debit={total_debit}, Credit={total_credit}"
     except Exception as e:
         return False, f"Error validating trial balance: {e}"
-
-if __name__ == "__main__":
-    report = generate_financial_report("data/cash_flows.csv")
-    if report:
-        print("Financial Report Summary:")
-        for key, value in report.items():
-            print(f"{key}: {value}")
-    
-    valid, message = validate_trial_balance("data/trial_balance.csv")
-    print(f"Trial Balance Validation: {message}")
