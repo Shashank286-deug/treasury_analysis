@@ -4,7 +4,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import io
 import logging
-import yfinance as yf
+try:
+    import yfinance as yf
+    YFINANCE_AVAILABLE = True
+except ImportError:
+    YFINANCE_AVAILABLE = False
+    logger.warning("yfinance not available; Treasury yield feature disabled.")
 from data_input import load_cash_flow_data
 from analysis import forecast_cash_flows, dcf_valuation, sensitivity_analysis
 from reporting import export_to_excel
@@ -94,7 +99,11 @@ except Exception as e:
 
 # Valuation with yfinance integration
 st.subheader("DCF Valuation")
-use_treasury_yield = st.checkbox("Use Current 10-Year Treasury Yield as Discount Rate", value=False)
+if YFINANCE_AVAILABLE:
+    use_treasury_yield = st.checkbox("Use Current 10-Year Treasury Yield as Discount Rate", value=False)
+else:
+    st.warning("Real-time Treasury yield feature unavailable due to missing yfinance library.")
+    use_treasury_yield = False
 
 if use_treasury_yield:
     try:
@@ -103,7 +112,7 @@ if use_treasury_yield:
         treasury_data = treasury.history(period="1d")
         if treasury_data.empty:
             raise ValueError("Could not fetch Treasury yield data.")
-        treasury_yield = treasury_data['Close'].iloc[-1] / 100  # Convert from % to decimal (e.g., 4.5% -> 0.045)
+        treasury_yield = treasury_data['Close'].iloc[-1] / 100  # Convert from % to decimal
         discount_rate = treasury_yield
         st.write(f"Current 10-Year Treasury Yield: {treasury_yield*100:.2f}% (used as discount rate)")
     except Exception as e:
