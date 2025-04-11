@@ -45,15 +45,25 @@ if uploaded_file:
             if cash_flow_data['Date'].isnull().any():
                 raise ValueError("Some dates could not be parsed. Please ensure the date column is in a valid format (e.g., YYYY-MM-DD).")
             
+            # Debug: Show raw Inflow and Outflow values
+            st.write("Raw Inflow Values:", cash_flow_data['Inflow'].tolist())
+            st.write("Raw Outflow Values:", cash_flow_data['Outflow'].tolist())
+            
             # Ensure Inflow and Outflow are numeric
             cash_flow_data['Inflow'] = pd.to_numeric(cash_flow_data['Inflow'], errors='coerce')
             cash_flow_data['Outflow'] = pd.to_numeric(cash_flow_data['Outflow'], errors='coerce')
-            if cash_flow_data['Inflow'].isnull().any() or cash_flow_data['Outflow'].isnull().any():
-                raise ValueError("Inflow or Outflow contains non-numeric values. Please ensure these columns contain numbers.")
+            if cash_flow_data['Inflow'].isnull().any():
+                invalid_inflows = cash_flow_data[cash_flow_data['Inflow'].isnull()]['Inflow'].index.tolist()
+                st.write("Rows with non-numeric Inflow:", invalid_inflows)
+                raise ValueError("Inflow contains non-numeric values. See rows above for details.")
+            if cash_flow_data['Outflow'].isnull().any():
+                invalid_outflows = cash_flow_data[cash_flow_data['Outflow'].isnull()]['Outflow'].index.tolist()
+                st.write("Rows with non-numeric Outflow:", invalid_outflows)
+                raise ValueError("Outflow contains non-numeric values. See rows above for details.")
             
             # Ensure at least one row
             if len(cash_flow_data) == 0:
-                raise ValueError("CSV is empty. Please upload a valid CSV with data.")
+                raise ValueError("CSV is empty. Please ensure the CSV contains data.")
             
             st.write("Standardized Data:", cash_flow_data.head())
             logger.debug(f"Standardized Data columns: {list(cash_flow_data.columns)}")
