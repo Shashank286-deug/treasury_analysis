@@ -13,16 +13,29 @@ st.title("Treasury & Investment Analysis")
 uploaded_file = st.file_uploader("Upload Cash Flow Data (CSV)", type='csv')
 if uploaded_file:
     # Save uploaded file temporarily
-    with open("temp_cash_flows.csv", "wb") as f:
-        f.write(uploaded_file.read())
-    cash_flow_data = load_cash_flow_data("temp_cash_flows.csv")
-    st.write("Uploaded Data:", cash_flow_data)
+    try:
+        with open("temp_cash_flows.csv", "wb") as f:
+            f.write(uploaded_file.read())
+        
+        # Load data
+        cash_flow_data = load_cash_flow_data("temp_cash_flows.csv")
+        st.write("Uploaded Data Columns:", list(cash_flow_data.columns))
+        st.write("Uploaded Data Preview:", cash_flow_data.head())
+    except Exception as e:
+        st.error(f"Error loading CSV: {e}")
+        st.stop()
 
     # Forecast parameters
     periods = st.slider("Forecast Periods (Months)", 1, 24, 12)
     growth_rate = st.slider("Growth Rate", 0.0, 0.1, 0.02, 0.01)
-    forecast = forecast_cash_flows(cash_flow_data, periods, growth_rate)
-    st.write("Cash Flow Forecast:", forecast)
+    
+    # Debug: Try forecasting
+    try:
+        forecast = forecast_cash_flows(cash_flow_data, periods, growth_rate)
+        st.write("Cash Flow Forecast:", forecast)
+    except Exception as e:
+        st.error(f"Error in forecasting: {e}")
+        st.stop()
 
     # Valuation
     discount_rate = st.slider("Discount Rate", 0.05, 0.15, 0.1, 0.01)
@@ -36,7 +49,6 @@ if uploaded_file:
     # Visualizations
     st.subheader("Visualizations")
     
-    # Cash Flow Forecast Plot
     plt.figure(figsize=(10, 6))
     plt.plot(forecast['Date'], forecast['Net Cash Flow'], label='Net Cash Flow')
     plt.title('Cash Flow Forecast')
@@ -47,7 +59,6 @@ if uploaded_file:
     st.pyplot(plt)
     plt.close()
 
-    # Sensitivity Analysis Heatmap
     pivot = sensitivity.pivot(index='Growth Rate', columns='Discount Rate', values='Valuation')
     plt.figure(figsize=(10, 6))
     sns.heatmap(pivot, annot=True, fmt='.0f', cmap='YlGnBu')
@@ -56,13 +67,16 @@ if uploaded_file:
     plt.close()
 
     # Download Excel report
-    export_to_excel(forecast, sensitivity, filename="treasury_report.xlsx")
-    with open("treasury_report.xlsx", "rb") as f:
-        st.download_button(
-            label="Download Report",
-            data=f,
-            file_name="treasury_report.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+    try:
+        export_to_excel(forecast, sensitivity, filename="treasury_report.xlsx")
+        with open("treasury_report.xlsx", "rb") as f:
+            st.download_button(
+                label="Download Report",
+                data=f,
+                file_name="treasury_report.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+    except Exception as e:
+        st.error(f"Error generating report: {e}")
 else:
     st.write("Please upload a cash_flows.csv file to begin.")
