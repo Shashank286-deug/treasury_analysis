@@ -1,0 +1,5 @@
+Account,Debit,Credit
+Cash,150000,0
+Revenue,0,150000
+Accounts Payable,0,60000
+Expenses,60000,0
