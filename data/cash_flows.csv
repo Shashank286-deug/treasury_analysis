@@ -1,5 +1,7 @@
 Date,Inflow,Outflow,Description,Budget
-2025-01-01,100000,40000,Solar Energy Sales vs. Maintenance,95000
-2025-02-01,120000,45000,Wind Turbine Revenue vs. Repairs,110000
-2025-03-01,110000,42000,Solar Panel Lease vs. Depreciation,105000
-2025-04-01,130000,48000,Wind Energy Sales vs. Operations,125000
+2024-01-01,100000,80000,Solar Energy Sales vs. Maintenance,95000
+2024-02-01,120000,90000,Wind Turbine Revenue vs. Repairs,115000
+2024-03-01,110000,85000,Solar Panel Lease vs. Depreciation,105000
+2024-04-01,130000,95000,Wind Energy Sales vs. Operations,125000
+2024-05-01,115000,87000,Solar Energy Sales vs. Maintenance,110000
+2024-06-01,125000,92000,Wind Turbine Revenue vs. Repairs,120000
