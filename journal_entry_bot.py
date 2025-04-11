@@ -1,4 +1,4 @@
-# Placeholder for UiPath RPA script (simulated)
+# Simulated UiPath RPA script
 def automate_journal_entries(cash_flows_file):
     """Simulate RPA for journal entry posting."""
     print(f"Loading {cash_flows_file} for journal entry automation...")
