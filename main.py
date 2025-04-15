@@ -4,32 +4,28 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import io
 import logging
+import numpy as np
 try:
     import yfinance as yf
     YFINANCE_AVAILABLE = True
 except ImportError:
     YFINANCE_AVAILABLE = False
-    st.warning("yfinance not available; Treasury yield feature disabled.")
+    logger.warning("yfinance not available; Treasury yield feature disabled.")
 from data_input import load_cash_flow_data
 from analysis import forecast_cash_flows, dcf_valuation, sensitivity_analysis
-from reporting import export_to_excel, generate_financial_report, validate_trial_balance
+from reporting import export_to_excel
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-st.title("Renewable Energy Financial Dashboard")
-st.markdown("U.S. GAAP-compliant reporting and cash flow analysis for solar and wind projects.")
+st.title("Treasury & Investment Analysis")
 
 # Sample data as fallback
 sample_data = pd.DataFrame({
     'Date': ['2024-01-01', '2024-02-01', '2024-03-01', '2024-04-01', '2024-05-01', '2024-06-01'],
     'Inflow': [100000, 120000, 110000, 130000, 115000, 125000],
-    'Outflow': [80000, 90000, 85000, 95000, 87000, 92000],
-    'Budget': [95000, 115000, 105000, 125000, 110000, 120000],
-    'Description': ['Solar Energy Sales vs. Maintenance', 'Wind Turbine Revenue vs. Repairs', 
-                    'Solar Panel Lease vs. Depreciation', 'Wind Energy Sales vs. Operations',
-                    'Solar Energy Sales vs. Maintenance', 'Wind Turbine Revenue vs. Repairs']
+    'Outflow': [80000, 90000, 85000, 95000, 87000, 92000]
 })
 sample_data['Date'] = pd.to_datetime(sample_data['Date'])
 
@@ -42,7 +38,6 @@ if uploaded_file:
         logger.debug("Saving uploaded CSV to temp_cash_flows.csv")
         with open("temp_cash_flows.csv", "wb") as f:
             f.write(uploaded_file.read())
-        
         logger.debug("Loading raw CSV")
         raw_df = pd.read_csv("temp_cash_flows.csv")
     except Exception as e:
@@ -69,19 +64,15 @@ try:
     logger.debug(f"Mapping columns: {date_col} -> Date, {inflow_col} -> Inflow, {outflow_col} -> Outflow")
     cash_flow_data = raw_df[[date_col, inflow_col, outflow_col]].copy()
     cash_flow_data.columns = ['Date', 'Inflow', 'Outflow']
-    
     cash_flow_data['Date'] = pd.to_datetime(cash_flow_data['Date'], errors='coerce')
     if cash_flow_data['Date'].isnull().any():
         raise ValueError("Some dates could not be parsed. Please ensure the date column is in a valid format (e.g., YYYY-MM-DD).")
-    
     cash_flow_data['Inflow'] = pd.to_numeric(cash_flow_data['Inflow'], errors='coerce')
     cash_flow_data['Outflow'] = pd.to_numeric(cash_flow_data['Outflow'], errors='coerce')
     if cash_flow_data['Inflow'].isnull().any() or cash_flow_data['Outflow'].isnull().any():
         raise ValueError("Inflow or Outflow contains non-numeric values. Please ensure these columns contain numbers.")
-    
     if len(cash_flow_data) == 0:
         raise ValueError("CSV is empty. Please ensure the CSV contains data.")
-    
     st.write("Standardized Data:", cash_flow_data.head())
     logger.debug(f"Standardized Data columns: {list(cash_flow_data.columns)}")
 except Exception as e:
@@ -89,35 +80,7 @@ except Exception as e:
     st.error(f"Error standardizing data: {e}")
     st.stop()
 
-# U.S. GAAP Financial Report
-st.subheader("U.S. GAAP Financial Metrics")
-report = generate_financial_report(cash_flow_data)
-if report:
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("EBITDA", f"${report['EBITDA']:,.2f}")
-        st.metric("Total Cash Flow", f"${report['Total_Cash_Flow']:,.2f}")
-        st.metric("Budget vs. Actual Variance", f"${report['Budget_vs_Actual']:,.2f}")
-        st.metric("Variance %", f"{report['Variance_Percent']:.2f}%")
-    with col2:
-        st.write("**Simplified Balance Sheet**")
-        balance = report['Balance_Sheet']
-        st.write(f"Assets: Cash = ${balance['Assets']['Cash']:,.2f}")
-        st.write(f"Liabilities: Accounts Payable = ${balance['Liabilities']['Accounts Payable']:,.2f}")
-        st.write(f"Equity: Retained Earnings = ${balance['Equity']['Retained Earnings']:,.2f}")
-else:
-    st.warning("Failed to generate financial report.")
-
-# Audit Readiness
-st.subheader("Audit Readiness")
-valid, message = validate_trial_balance()
-if valid:
-    st.success(message)
-else:
-    st.warning(message)
-
-# Original Forecast and Valuation
-st.subheader("Cash Flow Forecast and Valuation")
+# Forecast parameters
 periods = st.slider("Forecast Periods (Months)", 1, 24, 12)
 growth_rate = st.slider("Growth Rate", 0.0, 0.1, 0.02, 0.01)
 
@@ -130,10 +93,12 @@ except Exception as e:
     st.error(f"Error in forecasting: {e}")
     st.stop()
 
-# Valuation with yfinance
+# Valuation with yfinance integration
+st.subheader("DCF Valuation")
 if YFINANCE_AVAILABLE:
     use_treasury_yield = st.checkbox("Use Current 10-Year Treasury Yield as Discount Rate", value=False)
 else:
+    st.warning("Real-time Treasury yield feature unavailable due to missing yfinance library.")
     use_treasury_yield = False
 
 if use_treasury_yield:
@@ -145,7 +110,7 @@ if use_treasury_yield:
             raise ValueError("Could not fetch Treasury yield data.")
         treasury_yield = treasury_data['Close'].iloc[-1] / 100
         discount_rate = treasury_yield
-        st.write(f"Current 10-Year Treasury Yield: {treasury_yield*100:.2f}%")
+        st.write(f"Current 10-Year Treasury Yield: {treasury_yield*100:.2f}% (used as discount rate)")
     except Exception as e:
         logger.error(f"Error fetching Treasury yield: {e}")
         st.error(f"Error fetching Treasury yield: {e}. Falling back to manual input.")
@@ -161,6 +126,25 @@ except Exception as e:
     logger.error(f"Error in valuation: {e}")
     st.error(f"Error in valuation: {e}")
     st.stop()
+
+# Renewable Energy Risk-Adjusted Return Metric (RARM)
+st.subheader("Renewable Energy Risk-Adjusted Return Metric (RARM)")
+initial_investment = st.number_input("Initial Investment ($)", min_value=1.0, value=1000000.0, step=10000.0)
+st.write("Estimate risks affecting renewable energy projects (0 = no risk, 1 = extreme risk):")
+policy_risk = st.slider("Policy Risk (e.g., subsidy changes)", 0.0, 1.0, 0.2, 0.05)
+intermittency_risk = st.slider("Intermittency Risk (e.g., weather variability)", 0.0, 1.0, 0.2, 0.05)
+market_risk = st.slider("Market Risk (e.g., price volatility)", 0.0, 1.0, 0.2, 0.05)
+operational_risk = st.slider("Operational Risk (e.g., maintenance issues)", 0.0, 1.0, 0.2, 0.05)
+
+try:
+    # Equal weights for simplicity; can be customized
+    total_risk_score = (policy_risk + intermittency_risk + market_risk + operational_risk) / 4
+    rarm = (valuation / initial_investment) * (1 - total_risk_score)
+    st.write(f"**RARM**: {rarm*100:.2f}%")
+    st.write(f"(Expected return adjusted for {total_risk_score*100:.1f}% total risk)")
+except Exception as e:
+    logger.error(f"Error calculating RARM: {e}")
+    st.error(f"Error calculating RARM: {e}")
 
 # Sensitivity Analysis
 try:
@@ -201,32 +185,17 @@ except Exception as e:
     logger.error(f"Error plotting sensitivity: {e}")
     st.error(f"Error plotting sensitivity: {e}")
 
-# Download Reports
-st.subheader("Download Reports")
-# Original Excel Report
+# Download Excel report
 try:
     logger.debug("Generating Excel report")
-    excel_data = export_to_excel(forecast, sensitivity)
-    st.download_button(
-        label="Download Forecast Report (Excel)",
-        data=excel_data,
-        file_name="treasury_report.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-except Exception as e:
-    logger.error(f"Error generating Excel report: {e}")
-    st.error(f"Error generating Excel report: {e}")
-
-# New U.S. GAAP Report
-import os
-report_path = "outputs/financial_report.csv"
-if os.path.exists(report_path):
-    with open(report_path, "rb") as file:
+    export_to_excel(forecast, sensitivity, filename="treasury_report.xlsx")
+    with open("treasury_report.xlsx", "rb") as f:
         st.download_button(
-            label="Download U.S. GAAP Financial Report (CSV)",
-            data=file,
-            file_name="financial_report.csv",
-            mime="text/csv"
+            label="Download Report",
+            data=f,
+            file_name="treasury_report.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-else:
-    st.info("Financial report not yet generated. Displaying metrics above.")
+except Exception as e:
+    logger.error(f"Error generating report: {e}")
+    st.error(f"Error generating report: {e}")
