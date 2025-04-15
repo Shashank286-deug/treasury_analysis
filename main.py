@@ -5,6 +5,7 @@ import seaborn as sns
 import io
 import logging
 import numpy as np
+from io import BytesIO
 try:
     import yfinance as yf
     YFINANCE_AVAILABLE = True
@@ -185,17 +186,18 @@ except Exception as e:
     logger.error(f"Error plotting sensitivity: {e}")
     st.error(f"Error plotting sensitivity: {e}")
 
-# Download Excel report
+# Download Excel report using BytesIO
 try:
-    logger.debug("Generating Excel report")
-    export_to_excel(forecast, sensitivity, filename="treasury_report.xlsx")
-    with open("treasury_report.xlsx", "rb") as f:
-        st.download_button(
-            label="Download Report",
-            data=f,
-            file_name="treasury_report.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+    logger.debug("Generating Excel report in memory")
+    output = BytesIO()
+    export_to_excel(forecast, sensitivity, output)
+    output.seek(0)  # Reset pointer to the beginning of the BytesIO object
+    st.download_button(
+        label="Download Report",
+        data=output,
+        file_name="treasury_report.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 except Exception as e:
     logger.error(f"Error generating report: {e}")
     st.error(f"Error generating report: {e}")
