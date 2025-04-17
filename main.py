@@ -6,6 +6,7 @@ import io
 import logging
 import numpy as np
 from io import BytesIO
+import zipfile
 try:
     import yfinance as yf
     YFINANCE_AVAILABLE = True
@@ -200,11 +201,14 @@ try:
     plt.ylabel('Cash Flow ($)')
     plt.legend()
     plt.grid(True)
-    st.pyplot(plt)
+    # Save forecast chart to buffer
+    forecast_buf = io.BytesIO()
+    plt.savefig(forecast_buf, format='png', bbox_inches='tight')
     plt.close()
 except Exception as e:
     logger.error(f"Error plotting forecast: {e}")
     st.error(f"Error plotting forecast: {e}")
+    forecast_buf = None
 
 try:
     logger.debug("Plotting sensitivity heatmap")
@@ -212,11 +216,14 @@ try:
     plt.figure(figsize=(10, 6))
     sns.heatmap(pivot, annot=True, fmt='.0f', cmap='YlGnBu')
     plt.title('Sensitivity Analysis: Valuation ($)')
-    st.pyplot(plt)
+    # Save sensitivity chart to buffer
+    sensitivity_buf = io.BytesIO()
+    plt.savefig(sensitivity_buf, format='png', bbox_inches='tight')
     plt.close()
 except Exception as e:
     logger.error(f"Error plotting sensitivity: {e}")
     st.error(f"Error plotting sensitivity: {e}")
+    sensitivity_buf = None
 
 # Download Excel report using BytesIO
 st.subheader("Download Report")
@@ -224,9 +231,32 @@ try:
     logger.debug("Generating Excel report in memory")
     output = BytesIO()
     export_to_excel(forecast, sensitivity, output)
-    output.seek(0)  # Reset pointer to the beginning of the BytesIO object
+    output.seek(0)
+
+    # Create ZIP file with Excel and chart images
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        # Add Excel file
+        zip_file.writestr("treasury_report.xlsx", output.getvalue())
+        # Add forecast chart if available
+        if forecast_buf:
+            forecast_buf.seek(0)
+            zip_file.writestr("cash_flow_forecast.png", forecast_buf.getvalue())
+        # Add sensitivity chart if available
+        if sensitivity_buf:
+            sensitivity_buf.seek(0)
+            zip_file.writestr("sensitivity_analysis.png", sensitivity_buf.getvalue())
+
+    zip_buffer.seek(0)
     st.download_button(
-        label="Download Report",
+        label="Download All Data (ZIP)",
+        data=zip_buffer,
+        file_name="treasury_analysis_report.zip",
+        mime="application/zip"
+    )
+    # Keep the original Excel download option
+    st.download_button(
+        label="Download Report (Excel Only)",
         data=output,
         file_name="treasury_report.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
