@@ -1,4 +1,10 @@
 import streamlit as st
+
+# Add this right after other imports and before st.title
+if st.button('Guidance'):
+    with open('User_Manual.html', 'r', encoding='utf-8') as file:
+        st.components.v1.html(file.read(), height=600)
+import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
