@@ -22,17 +22,41 @@ logger = logging.getLogger(__name__)
 
 st.title("Treasury & Investment Analysis")
 
-# Sample data as fallback
-sample_data = pd.DataFrame({
-    'Date': ['2024-01-01', '2024-02-01', '2024-03-01', '2024-04-01', '2024-05-01', '2024-06-01'],
-    'Inflow': [100000, 120000, 110000, 130000, 115000, 125000],
-    'Outflow': [80000, 90000, 85000, 95000, 87000, 92000]
-})
-sample_data['Date'] = pd.to_datetime(sample_data['Date'])
+# Add CSS for background images with transparency and curve
+st.markdown(
+    """
+    <style>
+    .upload-section {
+        background-image: url('solar_icon.jpg');
+        background-size: cover;
+        background-position: center;
+        position: relative;
+        padding: 20px;
+        border-radius: 100%;
+        opacity: 0.6;
+    }
+    .later-sections {
+        background-image: url('wind_turbine_icon.jpg');
+        background-size: cover;
+        background-position: center;
+        position: relative;
+        padding: 20px;
+        opacity: 0.6;
+    }
+    .content {
+        position: relative;
+        z-index: 1;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
-# File upload or use sample
+# Upload section with solar_icon background
+st.markdown('<div class="upload-section">', unsafe_allow_html=True)
 use_sample = st.checkbox("Use Sample Data (if no CSV uploaded)", value=False)
 uploaded_file = st.file_uploader("Upload Cash Flow Data (CSV)", type='csv')
+st.markdown('</div>', unsafe_allow_html=True)
 
 if uploaded_file:
     try:
@@ -46,14 +70,21 @@ if uploaded_file:
         st.error(f"Error processing CSV: {e}")
         st.stop()
 elif use_sample:
-    raw_df = sample_data.copy()
+    raw_df = pd.DataFrame({
+        'Date': ['2024-01-01', '2024-02-01', '2024-03-01', '2024-04-01', '2024-05-01', '2024-06-01'],
+        'Inflow': [100000, 120000, 110000, 130000, 115000, 125000],
+        'Outflow': [80000, 90000, 85000, 95000, 87000, 92000]
+    })
+    raw_df['Date'] = pd.to_datetime(raw_df['Date'])
     st.write("Using sample data:")
     st.write(raw_df.head())
 else:
     st.write("Please upload a cash_flows.csv file or check 'Use Sample Data' to begin.")
     st.stop()
 
-# Column mapping
+# Later sections with wind_turbine_icon background
+st.markdown('<div class="later-sections">', unsafe_allow_html=True)
+st.markdown('<div class="content">', unsafe_allow_html=True)
 st.write("Detected Columns:", list(raw_df.columns))
 st.subheader("Map Your CSV Columns")
 date_col = st.selectbox("Select Date Column", raw_df.columns)
@@ -148,6 +179,7 @@ except Exception as e:
     st.error(f"Error calculating RARM: {e}")
 
 # Sensitivity Analysis
+st.subheader("Sensitivity Analysis")
 try:
     logger.debug("Running sensitivity_analysis")
     sensitivity = sensitivity_analysis(cash_flow_data, growth_rate, discount_rate)
@@ -187,6 +219,7 @@ except Exception as e:
     st.error(f"Error plotting sensitivity: {e}")
 
 # Download Excel report using BytesIO
+st.subheader("Download Report")
 try:
     logger.debug("Generating Excel report in memory")
     output = BytesIO()
@@ -201,3 +234,5 @@ try:
 except Exception as e:
     logger.error(f"Error generating report: {e}")
     st.error(f"Error generating report: {e}")
+st.markdown('</div>', unsafe_allow_html=True)  # Close content div
+st.markdown('</div>', unsafe_allow_html=True)  # Close later-sections div
