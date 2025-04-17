@@ -1,9 +1,10 @@
 import streamlit as st
 
 # Add this right after other imports and before st.title
-if st.button('Guidance'):
-    st.write('<script>window.open("https://github.com/Shashank286-deug/treasury_analysis/blob/main/User_Guidance.html", "_blank");</script>', unsafe_allow_html=True)
-
+st.markdown('<button onclick="openPopup()">Guidance</button>', unsafe_allow_html=True)
+with open('User_Guidance_Popup.html', 'r', encoding='utf-8') as file:
+    popup_content = file.read()
+st.markdown(popup_content, unsafe_allow_html=True)
 
 
 import streamlit as st
