@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasury & Investment Analysis User Manual</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background-color: #000; }
+        .sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            top: 0;
+            right: 0;
+            background-color: #fff;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+        }
+        .sidebar h1 { color: #2c3e50; text-align: center; }
+        .sidebar h2 { color: #34495e; margin-left: 20px; }
+        .sidebar ul { list-style-type: none; padding-left: 20px; }
+        .sidebar li { margin-bottom: 10px; }
+        .open-btn { padding: 10px 20px; background-color: #3498db; color: white; border: none; cursor: pointer; position: absolute; top: 10px; right: 10px; }
+        .open-btn:hover { background-color: #2980b9; }
+        .close-sidebar { width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+    <button class="open-btn" onclick="openSidebar()">Guidance</button>
+    <div id="sidebar" class="sidebar">
+        <h1>Treasury & Investment Analysis User Manual</h1>
+
+        <h2>Getting Started</h2>
+        <ul>
+            <li>Click the 'Guidance' button on the web app homepage to open this manual</li>
+            <li>Ensure you have an internet connection to use the app and view this guide</li>
+            <li>Prepare your cash flow data in a CSV file with 'Date', 'Inflow', and 'Outflow' columns</li>
+        </ul>
+
+        <h2>Uploading Data</h2>
+        <ul>
+            <li>Locate the 'Upload Cash Flow Data (CSV)' section on the homepage</li>
+            <li>Click 'Choose File' to select your prepared CSV file</li>
+            <li>Click the upload area or press 'Enter' to submit the file</li>
+            <li>Check 'Use Sample Data' if you don’t have a CSV file to proceed with example data</li>
+        </ul>
+
+        <h2>Mapping Columns</h2>
+        <ul>
+            <li>View the 'Detected Columns' list after uploading</li>
+            <li>Select the correct 'Date Column' from the dropdown menu</li>
+            <li>Choose the 'Inflow Column' from the dropdown menu</li>
+            <li>Select the 'Outflow Column' from the dropdown menu</li>
+            <li>Review the 'Standardized Data' table to confirm mappings</li>
+        </ul>
+
+        <h2>Running Analysis</h2>
+        <ul>
+            <li>Adjust the 'Forecast Periods (Months)' slider to set the forecast length (1-24 months)</li>
+            <li>Move the 'Growth Rate' slider to set the expected growth (0.0-0.1)</li>
+            <li>Check 'Use Current 10-Year Treasury Yield' for real-time discount rate, or set it manually with the 'Discount Rate' slider (0.05-0.15)</li>
+            <li>Enter 'Initial Investment' amount in the number input field</li>
+            <li>Slide the risk factors (Policy, Intermittency, Market, Operational) to assess RARM</li>
+            <li>View the 'Cash Flow Forecast', 'DCF Valuation', 'RARM', and 'Sensitivity Analysis' results</li>
+        </ul>
+
+        <h2>Visualizations</h2>
+        <ul>
+            <li>Scroll to the 'Visualizations' section to see the 'Cash Flow Forecast' chart</li>
+            <li>Check the 'Sensitivity Analysis' heatmap below the forecast chart</li>
+        </ul>
+
+        <h2>Downloading Reports</h2>
+        <ul>
+            <li>Go to the 'Download Report' section</li>
+            <li>Click 'Download Report (Excel Only)' for an Excel file with forecast and sensitivity data</li>
+            <li>Click 'Download All Data (ZIP)' for a ZIP file with Excel data and chart images</li>
+        </ul>
+
+        <h2>Troubleshooting</h2>
+        <ul>
+            <li>If data doesn’t load, verify your CSV has 'Date', 'Inflow', and 'Outflow' columns</li>
+            <li>If charts don’t appear, refresh the page or check your internet connection</li>
+            <li>If download fails, ensure no special characters are in your CSV file</li>
+        </ul>
+    </div>
+
+    <script>
+        function openSidebar() {
+            document.getElementById("sidebar").style.width = "300px";
+        }
+        function closeSidebar(event) {
+            if (event.target === document.getElementById("sidebar")) return;
+            document.getElementById("sidebar").style.width = "0";
+        }
+        document.addEventListener("click", closeSidebar);
+    </script>
+</body>
+</html>
