@@ -2,9 +2,10 @@ import streamlit as st
 
 # Add this right after other imports and before st.title
 st.markdown('<button class="open-btn" onclick="openSidebar()">Guidance</button><div id="sidebar" class="sidebar"></div>', unsafe_allow_html=True)
-with open('User_Manual_Sidebar.html', 'r', encoding='utf-8') as file:
+with open('User_Guidance_Sidebar.html', 'r', encoding='utf-8') as file:
     manual_content = file.read().replace('<button class="open-btn" onclick="openSidebar()">Guidance</button>', '')
 st.markdown(f'<script>{manual_content.split("<script>")[1].split("</script>")[0]}</script>', unsafe_allow_html=True)
+
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
