@@ -2,7 +2,7 @@ import streamlit as st
 
 # Add this right after other imports and before st.title
 if st.button('Guidance'):
-    st.write('<script>window.open("User_Guidance.html", "_blank");</script>', unsafe_allow_html=True)
+    st.write('<script>window.open("https://github.com/Shashank286-deug/treasury_analysis/blob/main/User_Guidance.html", "_blank");</script>', unsafe_allow_html=True)
 
 
 
