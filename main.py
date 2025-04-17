@@ -194,17 +194,19 @@ except Exception as e:
 st.subheader("Visualizations")
 try:
     logger.debug("Plotting forecast chart")
-    plt.figure(figsize=(10, 6))
+    fig1 = plt.figure(figsize=(10, 6))
     plt.plot(forecast['Date'], forecast['Net Cash Flow'], label='Net Cash Flow')
     plt.title('Cash Flow Forecast')
     plt.xlabel('Date')
     plt.ylabel('Cash Flow ($)')
     plt.legend()
     plt.grid(True)
+    # Display forecast chart
+    st.pyplot(fig1)
     # Save forecast chart to buffer
     forecast_buf = io.BytesIO()
-    plt.savefig(forecast_buf, format='png', bbox_inches='tight')
-    plt.close()
+    fig1.savefig(forecast_buf, format='png', bbox_inches='tight')
+    plt.close(fig1)  # Close specific figure
 except Exception as e:
     logger.error(f"Error plotting forecast: {e}")
     st.error(f"Error plotting forecast: {e}")
@@ -212,14 +214,16 @@ except Exception as e:
 
 try:
     logger.debug("Plotting sensitivity heatmap")
+    fig2 = plt.figure(figsize=(10, 6))
     pivot = sensitivity.pivot(index='Growth Rate', columns='Discount Rate', values='Valuation')
-    plt.figure(figsize=(10, 6))
     sns.heatmap(pivot, annot=True, fmt='.0f', cmap='YlGnBu')
     plt.title('Sensitivity Analysis: Valuation ($)')
+    # Display sensitivity chart
+    st.pyplot(fig2)
     # Save sensitivity chart to buffer
     sensitivity_buf = io.BytesIO()
-    plt.savefig(sensitivity_buf, format='png', bbox_inches='tight')
-    plt.close()
+    fig2.savefig(sensitivity_buf, format='png', bbox_inches='tight')
+    plt.close(fig2)  # Close specific figure
 except Exception as e:
     logger.error(f"Error plotting sensitivity: {e}")
     st.error(f"Error plotting sensitivity: {e}")
