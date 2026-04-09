@@ -1,36 +1,40 @@
-import streamlit as st
-
-# Add this right after other imports and before st.title
-st.markdown('<button onclick="openPopup()">Guidance</button>', unsafe_allow_html=True)
-with open('User_Guidance_Popup.html', 'r', encoding='utf-8') as file:
-    popup_content = file.read()
-st.markdown(popup_content, unsafe_allow_html=True)
-
-
-import streamlit as st
+import os
+import io
+import logging
+import zipfile
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import io
-import logging
-import numpy as np
+import streamlit as st
 from io import BytesIO
-import zipfile
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 try:
     import yfinance as yf
     YFINANCE_AVAILABLE = True
 except ImportError:
     YFINANCE_AVAILABLE = False
     logger.warning("yfinance not available; Treasury yield feature disabled.")
+
 from data_input import load_cash_flow_data
 from analysis import forecast_cash_flows, dcf_valuation, sensitivity_analysis
 from reporting import export_to_excel
 
-# Set up logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
 st.title("Treasury & Investment Analysis")
+
+# Load and display the guidance popup
+_popup_path = os.path.join(os.path.dirname(__file__), 'User_Guidance_Popup.html')
+try:
+    with open(_popup_path, 'r', encoding='utf-8') as _f:
+        _popup_content = _f.read()
+    st.markdown('<button onclick="openPopup()">Guidance</button>', unsafe_allow_html=True)
+    st.markdown(_popup_content, unsafe_allow_html=True)
+except Exception as _e:
+    logger.warning(f"Could not load guidance popup: {_e}")
 
 # Add CSS for background images with transparency and curve
 st.markdown(
@@ -70,11 +74,8 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 if uploaded_file:
     try:
-        logger.debug("Saving uploaded CSV to temp_cash_flows.csv")
-        with open("temp_cash_flows.csv", "wb") as f:
-            f.write(uploaded_file.read())
-        logger.debug("Loading raw CSV")
-        raw_df = pd.read_csv("temp_cash_flows.csv")
+        logger.debug("Reading uploaded CSV")
+        raw_df = pd.read_csv(uploaded_file)
     except Exception as e:
         logger.error(f"Error processing CSV: {e}")
         st.error(f"Error processing CSV: {e}")
